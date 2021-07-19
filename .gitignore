@@ -1,6 +1,7 @@
 # Custom
 HTTP_PROXIES.txt
 SOCKS5_PROXIES.txt
+TZ.txt
 
 
 # Byte-compiled / optimized / DLL files

@@ -33,7 +33,7 @@ class Log:
         open(self.fileName, 'w', encoding='utf-8').close()
         pass
     
-    def _Log(self, level: str, message: str) -> None:
+    def Logging(self, level: str, message: str) -> None:
         log = self.FormatToLog(self.Now(), level, message)
         try:
             print(log)
@@ -46,19 +46,19 @@ class Log:
             print(f"\n{self.FormatToLog(self.Now(), self.Level.CRITICAL, 'Не удалось записать лог! {e}')}\n")
 
     def Info(self, message: str) -> None:
-        self._Log(self.Level.INFO, message)
+        self.Logging(self.Level.INFO, message)
 
     def Warning(self, message: str) -> None:
-        self._Log(self.Level.WARNING, message)
+        self.Logging(self.Level.WARNING, message)
     
     def Critical(self, message: str) -> None:
-        self._Log(self.Level.CRITICAL, message)
+        self.Logging(self.Level.CRITICAL, message)
 
     def Debug(self, message: str) -> None:
-        self._Log(self.Level.DEBUG, message)
+        self.Logging(self.Level.DEBUG, message)
 
     def Error(self, message: str) -> None:
-        self._Log(self.Level.ERROR, message)
+        self.Logging(self.Level.ERROR, message)
 
 if __name__ == '__main__':
     log = Log()

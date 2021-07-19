@@ -5,7 +5,7 @@ import os
 import logging
 import time
 import chromedriver_autoinstaller
-from seleniumwire.webdriver import Chrome
+from seleniumwire.webdriver import Chrome, ChromeOptions
 from pprint import pprint 
 
 
@@ -55,7 +55,8 @@ class Main:
 
 
 class Driver(Main):
-    def __init__(self) -> None:
+    def __init__(self, incognitoMode: bool=False) -> None:
+        self.incognitoMode = incognitoMode
         super().__init__()
 
         self.log.Info('Проверка наличия ChromeDriver...')
@@ -69,15 +70,23 @@ class Driver(Main):
 
 
     def CreateNewDriver(self, proxy: str=None):
-        self._options = {}
+        self._wireOptions = {}
+        self._options = ChromeOptions()
+        self._options.add_argument('--ignore-certificate-errors-spki-list')
+
         if proxy:
-            self._options['proxy'] = {
+            self._wireOptions['proxy'] = {
                 'http': proxy, 
                 'https': proxy,
                 'socks5': proxy,
                 'no_proxy': 'localhost,127.0.0.1'
             }
-        self._driver = Chrome(seleniumwire_options=self._options)
+
+        if self.incognitoMode:
+            self._options.add_argument('--incognito')
+            self._wireOptions['incognito'] = True
+
+        self._driver = Chrome(seleniumwire_options=self._wireOptions, options=self._options, )
     
     def FindElementById(self, id_: str) -> WebElement:
         return self._driver.find_element_by_id(id_)
@@ -130,5 +139,6 @@ if __name__ == '__main__':
     driver.Get('https://www.google.com')
     time.sleep(3)
     driver.Close()
+    exit()
 
     
