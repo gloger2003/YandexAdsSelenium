@@ -8,53 +8,18 @@ import chromedriver_autoinstaller
 from seleniumwire.webdriver import Chrome, ChromeOptions
 from pprint import pprint 
 
+import FileManager
 
-class Main:
-    HTTP_PROXY_FILE_NAME = './HTTP_PROXIES.txt'
-    SOCKS5_PROXY_FILE_NAME = './SOCKS5_PROXIES.txt'
-
+class Object:
     def __init__(self) -> None:
         self.log = Log()
-
         self.lastIndexProxy: int = -1
         pass
 
-    def ReadFile(self, fileName: str) -> str:
-        text: str = ''
-        try:
-            with open(fileName, 'r', encoding='utf-8') as f:
-                text = f.read()
-        except FileNotFoundError:
-            self.log.Error(f'Файл "{fileName}" не найден, создан новый!')
-            open(fileName, 'w', encoding='utf-8').close()
-        except Exception as e:
-            self.log.Error(f'Ошибка при открытии файла "{fileName}"')
-        return text
-
-    def FormatProxies(self, proxyList: List[str], proxyType: str) -> List[str]:
-        badProxyList = self.ReadFile(self.HTTP_PROXY_FILE_NAME).split('\n')
-        proxyList = []
-        for badProxy in badProxyList:
-            splittedBadProxy = badProxy.split('@')
-            splittedBadProxy.reverse()
-            proxyList.append(f'{proxyType}://' + '@'.join(splittedBadProxy))
-        return proxyList
-
-    def GetHttpProxyList(self) -> List[str]:
-        return self.FormatProxies(self.ReadFile(self.HTTP_PROXY_FILE_NAME).split('\n'), 'http')
-
-    def GetSocksProxyList(self) -> List[str]:
-        return self.FormatProxies(self.ReadFile(self.SOCKS5_PROXY_FILE_NAME).split('\n'), 'socks5')
-
-    def GetProxyList(self) -> List[str]:
-        return self.GetHttpProxyList() + self.GetSocksProxyList()
-
-        
-            
 
 
 
-class Driver(Main):
+class Driver(Object):
     def __init__(self, incognitoMode: bool=False) -> None:
         self.incognitoMode = incognitoMode
         super().__init__()
@@ -87,25 +52,7 @@ class Driver(Main):
             self._wireOptions['incognito'] = True
 
         self._driver = Chrome(seleniumwire_options=self._wireOptions, options=self._options, )
-    
-    def FindElementById(self, id_: str) -> WebElement:
-        return self._driver.find_element_by_id(id_)
-
-    def FindElementsById(self, id_: str) -> List[WebElement]:
-        return self._driver.find_elements_by_id(id_)
-
-    def FindElementByClassName(self, className: str) -> WebElement:
-        return self._driver.find_element_by_class_name(className)
-
-    def FindElementsByClassName(self, className: str) -> List[WebElement]:
-        return self._driver.find_elements_by_class_name(className)
-
-    def FindElementByName(self, name: str) -> WebElement:
-        return self._driver.find_element_by_name(name)
-
-    def FindElementsByName(self, name: str) -> List[WebElement]:
-        return self._driver.find_elements_by_name(name)
-    
+        
 
     def Get(self, url: str) -> None:
         self._driver.get(url)
@@ -114,7 +61,7 @@ class Driver(Main):
         self._driver.close()
 
     def NextProxy(self) -> str:
-        proxyList = self.GetProxyList()
+        proxyList = FileManager.GetProxyList()
 
         self.lastIndexProxy += 1
         if self.lastIndexProxy >= len(proxyList):
