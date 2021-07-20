@@ -45,19 +45,19 @@ class Log:
         except Exception as e:
             print(f"\n{self.FormatToLog(self.Now(), self.Level.CRITICAL, 'Не удалось записать лог! {e}')}\n")
 
-    def Info(self, message: str) -> None:
+    def Info(self, message: str='') -> None:
         self.Logging(self.Level.INFO, message)
 
-    def Warning(self, message: str) -> None:
+    def Warning(self, message: str='') -> None:
         self.Logging(self.Level.WARNING, message)
     
-    def Critical(self, message: str) -> None:
+    def Critical(self, message: str='') -> None:
         self.Logging(self.Level.CRITICAL, message)
 
-    def Debug(self, message: str) -> None:
+    def Debug(self, message: str='') -> None:
         self.Logging(self.Level.DEBUG, message)
 
-    def Error(self, message: str) -> None:
+    def Error(self, message: str='') -> None:
         self.Logging(self.Level.ERROR, message)
 
 if __name__ == '__main__':

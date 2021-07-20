@@ -15,5 +15,4 @@ if __name__ == '__main__':
     adsBot.mStandartProxyWarmUpper.Run()
 
     time.sleep(5)
-    # adsBot.Close()
     

@@ -1,5 +1,5 @@
 from selenium.webdriver.remote.webelement import WebElement
-from FileManager import GetProxyListWarmUp
+from FileManager import GetProxyListWarmUp, GetReqTextWarmUpList
 from Driver import Driver
 from random import randint
 from selenium.common.exceptions import NoSuchElementException
@@ -15,29 +15,44 @@ import time
 
 
 class MStandartProxyWarmUpper:
-    def __init__(self, driver: Driver, visitCount: int=2) -> None:
+    def __init__(self, driver: Driver) -> None:
         self.log = Log()
 
         self.driver = driver
-        self.visitCount = visitCount
+
+        self.maxVisitCount: int=2
+        self.geo: str = ''
 
         self.proxyList = GetProxyListWarmUp()
         pass
 
 
     def Run(self):
-        links = self.GetSiteLinks('продукты')
-        pprint(links)
+        # self.geo = input('Введите местоположение или оставьте пустым: ')
+        # self.maxVisitCount = input('Введите сколько ссылок нужно пройти для прогрева: ')
+
+        for proxy in GetProxyListWarmUp():
+            self.driver.SetProxy(proxy=proxy)
+
+            for reqText in GetReqTextWarmUpList():
+                visittedCount: int = 0
+                page: int = 0
+                if visittedCount < self.maxVisitCount:
+                    links = self.GetSiteLinks(reqText=reqText, page=page)
+
+                    self.log.Debug(links)
 
 
-    def GetSiteLinks(self, text: str, page: int=None):
-        reqUrl = f"https://yandex.ru/search/?text={text}"
-        if page:
-            reqUrl += f'&p={page}'
-        self.driver.Get(reqUrl)
-        time.sleep(3)
+    def GetSiteLinks(self, reqText: str, page: int=0):
+
+        self.driver.SearchRequest(reqText, page)
 
         allSerpItems = self.driver._driver.find_elements_by_class_name('serp-item')
+
+        if not allSerpItems:
+            self.log.Info()
+            self.log.Info(f'Найден прокси с плохой репутацией')
+            self.log.Info(f'- Прокси: {self.driver.proxy}')
         
         self.log.Info('')
         self.log.Info(f'Кол-во ссылок до форматирования: {len(allSerpItems)}')
@@ -47,16 +62,14 @@ class MStandartProxyWarmUpper:
         newSerpItems: List[WebElement] = []
 
         self.log.Info('')
-        self.log.Info('Проверка ссылок')
-
-        self.log.Info('')
+        self.log.Info('Проверка ссылок:')
         for serpItem in allSerpItems:
             if 'реклама' in serpItem.text:
-                self.log.Info('Ссылка с контекстной рекламой игнорирована')
+                self.log.Info('- Ссылка с контекстной рекламой удалена')
             else:
                 newSerpItems.append(serpItem)
 
-        self.log.Info()
+        self.log.Info('')
         self.log.Info(f'Кол-во ссылок после форматирования: {len(newSerpItems)}')
         
         self.log.Info('')
