@@ -1,0 +1,51 @@
+Задача
+Скликивание объявлений конкурентов на Поиске Яндекс
+
+Функции
+2 - Возможность добавить домен в исключения чтобы свою рекламу не скликивать
+
+3 - Возможность добавлять домен конкурента чтобы программа 
+    скликивала только домен конкурента (возможность добавить много доменов)
+
+4 - Имитирование пользователя, просмотр сайта, переходы по внутренним ссылкам, листание страниц
+5 - Возможность задавать время прибытия на сайте (например от 3 сек до 10 мин)
+
+11 - Смена апи юзер-агента
+
+14 - Возможность задержки между сменой айпи от 10 сек - 10 мин
+15 - Возможность запуска и отключение бота в заданное время
+
+
+
+
+Принцип работы:
+
+- Задаем регион
+- Вбиваем ключевой запрос в бота
+- Выставляем все настройки из перечисленных
+
+- Бот начинает работать, в поисковой строке вводит 
+    наш запрос и начинает кликать по рекламе и имитировать 
+    пользователя (нужно учесть тот факт что рекламных ссылок 
+    может быть 1-4 сверху и 1-4 снизу выдачи, бот должен 
+    отличать рекламную выдачу от сео выдачи)
+    
+- Весь основной функционал работы есть по ссылке 
+    https://drive.google.com/file/d/19zFgOAjZOfUuyBu_tU7xToz38_Voe2Jn/view?usp=sharing
+
+
+
+
+
+Принцип работы "Простой прогрев прокси":
+
+1 - Поисковой запрос
+2 - Проход по СЕО-выдаче (Ссылки без отметки "Реклама"), учитывать несколько страниц поисковой выдачи
+3 - Переход на сайт, рандомный скролл (в будущем и переход по внутренним ссылкам)
+4 - Очистка куки
+5 - Смена айпи
+
+
+
+
+http://yabs.yandex.ru/count/WoqejI_zO2S37Ha0T2jdK1jbMAZ5OGK09mGnYENsO000000u109m-AU8ZOqTW06_XwMf0OW1mvFTbakG0QBgxP7FW8200fW1ekhjaK-u0OoOZlWUm05Ss07wdxiUu06Ivx4Jw05Oe0A0_EWMs082y0A9o8sg19W3oCeulVu7-0J3nFC1Y0N3nFC1a0N7bkGBe0MYfage1PprFR05dFKzk0NHj_y2m0MhrA0Ho0M0mx56g0P6k0RMgm791g3yOTErEYXesGO0002GvG000Aa7irmmVohK5Zcm1u20c3ou1ve4yGTS7KIRpKd9X8A0WSI0lhGBy3_92YLZK0lYsUK_-0g0jHYg2n3nniABirm007atx5UFnmK0sGle2yF4ym7m2mg83CwVthu1gGpyEGmU0SZRl-WCfmBW3OE0W4293iVN_GSrgU-W-OURtTQEbDZP3u0G-9oP62Q04IEO4UB31w5POIP5yHDPFx4IjOPVjleQxZ_f4dREImqsb_rYy18cY1C1c1C4g1EdZEVVsuYnc-7W4z6t_mAW5D6t_mAe5CUMv0lmuSJp1UWKX0BG5V3XnFC5s1N1YlRieu-y_6Fmc1RGYSs71g395j0Mpf_UlW615vWNnutk4wWN2S0Nj1BO5y24FPaOe1WEi1Z5dzk71j0O8VWOt-NWze6Ntx330O0PiFIuuj2zaRaWa1a1e1b6i1cu6V___m7I6H9vOM9pNtDbSdPbSYzoDJGsBJBe6O320_0PWC83WHh__x-3vmoUaPWQrCDJe1getgJ6xOAMmyO1i1hvjPA2dA68iWpr6W4000226r4nDZ8sDpapCpKoDpCqD34rBJ4nDpWtCp0sEJGoEJGpDp0sCpOjTcnXCIqpCpKrBNPiOIriDorYOMnXRcDbSYrmSczaBJWmE30jGa5CBJ8tDZEm6pUu6mE27EaSW1t_Vo4049lnqH9uzLr0yhDWJBXLYf_aqX29HqbJ6H6NBRFvCrlOFv-DEIIxH11xoMefRUT1liWY0LnAMtxyiAWFiAwrPM1UGG0fPZ6XQc8ik8JNrwo9CVGu0NdEO87EGM2jUd0QsQkCdz888GO0~1?from=yandex.ru%3Bsearch%26%23x2F%3B%3Bweb%3B%3B0%3B&q=%D0%B5%D0%B4%D0%B0&etext=2202.fmIl_YQTzx-T0eNSuqwR4GZzeGJ3YWlqemFja3FucHA.95c290ff303f20b2720c9e67ec3ca40592f183c3&baobab_event_id=krc92dek7k
