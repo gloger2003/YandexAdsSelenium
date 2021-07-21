@@ -1,3 +1,4 @@
+from pprint import pprint
 from Logger import Log
 import os
 from typing import List
@@ -11,6 +12,12 @@ HTTP_PROXY_WARM_UP_FILE_NAME = f'./{DIR_NAME}/HTTP_WARM_UP_PROXIES.txt'
 SOCKS5_PROXY_WARM_UP_FILE_NAME = f'./{DIR_NAME}/SOCKS5_WARM_UP_PROXIES.txt'
 
 REQ_TEXTS_WARM_UP_FILE_NAME = f'./{DIR_NAME}/REQ_TEXTS_WARM_UP.txt'
+REQ_TEXTS_FILE_NAME = f'./{DIR_NAME}/REQ_TEXTS.txt'
+
+TARGET_DOMENS_FILE_NAME = f'./{DIR_NAME}/TARGET_DOMENS.txt'
+IGNORED_DOMENS_FILE_NAME = f'./{DIR_NAME}/IGNORED_DOMENS.txt'
+
+
 
 if not os.path.exists(DIR_NAME):
     os.mkdir(DIR_NAME)
@@ -71,7 +78,18 @@ def GetProxyListWarmUp() -> List[str]:
 def GetReqTextWarmUpList() -> List[str]:
     return ReadFile(REQ_TEXTS_WARM_UP_FILE_NAME).split('\n')
 
+def GetReqTextList() -> List[str]:
+    return ReadFile(REQ_TEXTS_FILE_NAME).split('\n')
+
+
+
+def GetTargetDomensList() -> List[str]:
+    return [k.strip() for k in ReadFile(TARGET_DOMENS_FILE_NAME).split('\n')]
+
+def GetIgnoredDomensList() -> List[str]:
+    return [k.strip() for k in ReadFile(IGNORED_DOMENS_FILE_NAME).split('\n')]
+
 
 
 if __name__ == '__main__':
-    GetProxyListWarmUp()
+    pprint(GetTargetDomensList())
