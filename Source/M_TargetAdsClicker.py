@@ -108,15 +108,17 @@ class TargetAdsClicker:
                             if self.driver.ClickToRandomLinkTag(internalLinkTags, '-- Переход на внутреннюю ссылку: '):
                                 self.driver.EmulateRandomScroll()
 
-                                totalTime = time.time() - startTime
-                                if totalTime >= self.maxResidenceTime:
-                                    break
-
-                            self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
                         else:
                             self.log.Info('Пропускаю сайт:')
                             self.log.Info(f'- Ссылка: {link[1]}')
                             self.log.Info(f'- Домен: {link[0]}')
+                            break
+
+
+                        totalTime = time.time() - startTime
+                        if totalTime >= self.maxResidenceTime:
+                            break
+                        self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
                 
                     self.log.Info()
                     self.log.Info(f'Эмуляция действий на сайте окончена:')

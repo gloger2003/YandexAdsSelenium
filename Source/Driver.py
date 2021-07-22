@@ -7,9 +7,11 @@ from random import randint
 from typing import List, Tuple
 
 import chromedriver_autoinstaller
+import selenium
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from seleniumwire.webdriver import Chrome, ChromeOptions
+from selenium.common.exceptions import *
 
 from python_rucaptcha import ImageCaptcha
 
@@ -28,10 +30,12 @@ RUCAPTCHA_KEY = '8d7c6cb7d5e9223165451134353fcdd2'
 
 class Driver(Object):
     def __init__(self, incognitoMode: bool=False) -> None:
+        self.DEV_MODE = False
         self.incognitoMode = incognitoMode
         self.lastIndexProxy: int = -1
         self.proxy: str = None
         self.geo: str = None
+        self.userAgent: str = None
         super().__init__()
 
         self.log.Info('Проверка наличия ChromeDriver...')
@@ -40,7 +44,7 @@ class Driver(Object):
         self.CreateNewDriver()
 
 
-    def CreateNewDriver(self, proxy: str=None, incognitoMode: bool=False, geo: str=None):
+    def CreateNewDriver(self, proxy: str=None, incognitoMode: bool=False, geo: str=None, userAgent: str=None):
         self._wireOptions = {}
         self._options = ChromeOptions()
         self._options.add_argument('--ignore-certificate-errors-spki-list')
@@ -62,11 +66,16 @@ class Driver(Object):
         if incognitoMode or self.incognitoMode:
             self.incognitoMode = True
             self._options.add_argument('--incognito')
-            self._wireOptions['incognito'] = True
+
+        if userAgent or self.userAgent:
+            self.userAgent = userAgent
+            self._options.add_argument(f'--user-agent={userAgent}')
 
         self.log.Info()
         self.log.Info('Запуск новой копии браузера. Параметры:')
         self.log.Info(f'- Прокси: {proxy}')
+        self.log.Info(f'- Юзер-агент: {userAgent}')
+        self.log.Info(f'- Гео-локация: {self.geo}')
         self.log.Info(f'- Режим инкогнито: {incognitoMode}')
 
         self._driver = Chrome(seleniumwire_options=self._wireOptions, options=self._options)
@@ -107,11 +116,22 @@ class Driver(Object):
                 print(user_answer ['errorBody'])
                 raise(BaseException('Капча не была решена!'))
 
-    def GetInternalLinkTags(self, currentDomen: str) -> List[str]:
+    def GetInternalLinkTags(self, currentDomen: str) -> List[WebElement]:
         try:
             internalLinkTags = [k for k in self._driver.find_elements_by_tag_name('a')]
-            internalLinkTags = [internalLinkTags.remove(k) if currentDomen in k.get_attribute('href') else k for k in internalLinkTags]
+
+            newInternalLinkTags = []
+            
+            for linkTag in internalLinkTags:
+                try:
+                    if currentDomen in linkTag.get_attribute('href') and linkTag.get_attribute("target") == '':
+                        newInternalLinkTags.append(linkTag)
+                except StaleElementReferenceException:
+                    pass
+                except TypeError:
+                    raise(AttributeError())
             return internalLinkTags
+
         except AttributeError:
             self.log.Warning('Не удалось получить внутренние ссылки!')
             return []
@@ -127,8 +147,18 @@ class Driver(Object):
                 break
             except:
                 pass
+
             tryCount += 1
-        return True        
+        
+        try:
+            self._driver.switch_to.window(window_name=self._driver.window_handles[1])
+            self._driver.close()
+
+            self._driver.switch_to.window(window_name=self._driver.window_handles[0])
+        except:
+            pass
+
+        return True   
     
     def SearchRequest(self, text: str, page: int=0) -> None:
         self.log.Info()
@@ -160,14 +190,17 @@ class Driver(Object):
                 self.log.Info(f'---- {_}')
                 time.sleep(1)
 
-    def SetProxy(self, proxy: str) -> None:
+    def SetProxy(self, proxy: str='localhost') -> None:
         self.log.Info()
         self.log.Info(f'Установлен новый прокси: {proxy}')
         
+        self.ClearAllCookies()
         self.CreateNewDriver(proxy=proxy)
         pass
 
     def ClearAllCookies(self):
+        self.log.Info('Куки удалены:')
+        self.log.Info(f'- JSON: {self._driver.get_cookies()}')
         self._driver.delete_all_cookies()
 
     def SetGeo(self, geo: str):
@@ -192,6 +225,11 @@ class Driver(Object):
         self.log.Info()
         self.log.Info('Гео-локация успешно изменена!')
 
+    def Quit(self) -> None:
+        try:
+            self._driver.quit()
+        except:
+            pass
 
 
 def RUN_TEST():

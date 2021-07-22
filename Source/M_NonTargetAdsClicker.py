@@ -1,16 +1,13 @@
 import time
-from pprint import pprint
-from random import randint
 from typing import List, Tuple
 
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from Driver import Driver
 from FileManager import GetProxyList, GetReqTextList, GetIgnoredDomensList
-from Logger import DEV_MODE, Log
+from Logger import Log
 
 
 class NonTargetAdsClicker:
@@ -18,12 +15,10 @@ class NonTargetAdsClicker:
         self.log = Log()
         self.driver = driver
 
-        self.maxPageCount: int = 1
-        self.maxResidenceTime: int = 600
+        self.maxPageCount: int = 2
+        self.maxResidenceTime: int = 20
         pass
 
-    def GetUserInput(self):
-        pass
 
     def GetSiteLinks(self, reqText: str, page: int=0):
         self.driver.SearchRequest(reqText, page)
@@ -82,7 +77,6 @@ class NonTargetAdsClicker:
 
         return siteLinks
 
-
     def _Run(self, proxy: str='localhost'):
         for reqText in GetReqTextList():
                 
@@ -111,15 +105,18 @@ class NonTargetAdsClicker:
                             if self.driver.ClickToRandomLinkTag(internalLinkTags, '-- Переход на внутреннюю ссылку: '):
                                 self.driver.EmulateRandomScroll()
 
-                                totalTime = time.time() - startTime
-                                if totalTime >= self.maxResidenceTime:
-                                    break
-
-                            self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
                         else:
                             self.log.Info('Пропускаю сайт:')
                             self.log.Info(f'- Ссылка: {link[1]}')
                             self.log.Info(f'- Домен: {link[0]}')
+                            break
+
+
+                        totalTime = time.time() - startTime
+                        if totalTime >= self.maxResidenceTime:
+                            break
+                        self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
+
 
                     self.log.Info()
                     self.log.Info(f'Эмуляция действий на сайте окончена:')
@@ -128,19 +125,21 @@ class NonTargetAdsClicker:
                     self.log.Info(f'- Время нахождения: {totalTime}')
                     self.log.Info(f'- Прокси: {proxy}')
 
-        self.log.Info()
-        self.log.Info(f'Обход нецелевых доменов завершён с одного прокси')
-        self.log.Info(f'- Использованный прокси: {proxy}')
-        self.log.Info(f'- Использованная гео-локация: {self.driver.geo}')
-        self.log.Info(f'- Ссылок пройдено: {len(links)}')
+            self.log.Info()
+            self.log.Info(f'Обход нецелевого домена завершён:')
+            self.log.Info(f'- Использованный прокси: {proxy}')
+            self.log.Info(f'- Использованная гео-локация: {self.driver.geo}')
+            self.log.Info(f'- Ссылок пройдено: {len(links)}')
 
 
+    def GetUserInput(self):
+        pass
 
     def Run(self):
         self.log.Info()
         self.log.Info('Запущен модуль работы с целевыми доменами')
 
-        if DEV_MODE:
+        if self.driver.DEV_MODE:
             self._Run()
         else:
             self.GetUserInput()
@@ -149,7 +148,7 @@ class NonTargetAdsClicker:
                 self._Run(proxy=proxy)
 
         self.log.Info()
-        self.log.Info('Обход целевых доменов полностью завершён со всех доступных прокси')
+        self.log.Info('Обход нецелевых доменов полностью завершён со всех доступных прокси:')
         self.log.Info(f'- Использованные прокси: {GetProxyList()}')
         self.log.Info(f'- Использованная гео-локация: {self.driver.geo}')
         pass

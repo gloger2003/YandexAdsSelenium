@@ -23,6 +23,7 @@ class StandartProxyWarmUpper:
 
         self.maxVisitCount: int=2
         self.geo: str = ''
+        self.maxResidenceTime: int = 600
 
         self.proxyList = GetProxyListWarmUp()
         pass
