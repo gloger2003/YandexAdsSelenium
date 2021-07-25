@@ -17,16 +17,26 @@ class AdsBot(Driver):
         self.m_StandartProxyWarmUpper = StandartProxyWarmUpper(self)
 
     def ReWriteData(self):
+        print()
         self.DEV_MODE = bool(input('Включить режим разработчика | [True] [False] |: '))
         self.maxPageCount = int(input('Введите максимальное кол-во страниц: '))
         self.maxResidenceTime = int(input('Введите максимальное время пребывания на сайте: '))
         self.maxVisitCount = int(input('Введите максимальное кол-во посещённых сайтов: '))
         self.geo = input('Введите гео-локацию (город): ')
         self.proxy = input('Введите прокси (login:password@address:port): ')
+        print()
+
+        self.CreateNewDriver()
 
 
 if __name__ == '__main__':
     adsBot = AdsBot(False)
+    
+    adsBot.maxResidenceTime = 20
+    adsBot.maxPageCount = 2
+    adsBot.geo = 'Москва'
+
+    adsBot.CreateNewDriver()
     adsBot.m_NonTargetAdsClicker.Run()
 
     time.sleep(5)

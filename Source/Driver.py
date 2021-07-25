@@ -91,33 +91,39 @@ class Driver(Object):
     def Get(self, url: str) -> None:
         self.log.Info()
         self.log.Info(f'Загрузка новой ссылки: {url}')
-        self._driver.get(url)
+
+        while True:
+            try:
+                self._driver.get(url)
+                break
+            except Exception as e:
+                self.log.Critical()
+                self.log.Critical(f'Не удалось загрузить страницу:')
+                self.log.Critical(f'- Сообщение об ошибке: {e}')
         
         if 'Ой' in self._driver.title:
             self._driver.find_element_by_class_name('CheckboxCaptcha-Button').click()
             time.sleep(3)
 
             # Ссылка на изображения для расшифровки
-            image_link = self._driver.find_element_by_class_name('AdvancedCaptcha-Image').get_attribute('src')
-
-            # time.sleep(1000)
+            imageLink = self._driver.find_element_by_class_name('AdvancedCaptcha-Image').get_attribute('src')
 
             # Возвращается JSON содержащий информацию для решения капчи
-            user_answer = ImageCaptcha.ImageCaptcha(rucaptcha_key=RUCAPTCHA_KEY).captcha_handler(captcha_link=image_link)
+            userAnswer = ImageCaptcha.ImageCaptcha(rucaptcha_key=RUCAPTCHA_KEY).captcha_handler(captcha_link=imageLink)
 
-            if not user_answer['error']:
+            if not userAnswer['error']:
                 # решение капчи
-                self._driver.find_element_by_name('rep').send_keys(user_answer['captchaSolve'])
+                self._driver.find_element_by_name('rep').send_keys(userAnswer['captchaSolve'])
                 self._driver.find_element_by_name('rep').send_keys(Keys.RETURN)
-                print(user_answer['captchaSolve'])
-                print(user_answer['taskId'])
+                print(userAnswer['captchaSolve'])
+                print(userAnswer['taskId'])
 
                 self._driver.get(url)
 
-            elif user_answer['error']:
+            elif userAnswer['error']:
                 # Тело ошибки, если есть
-                print(user_answer ['errorBody'])
-                print(user_answer ['errorBody'])
+                print(userAnswer ['errorBody'])
+                print(userAnswer ['errorBody'])
                 raise(BaseException('Капча не была решена!'))
 
     def GetInternalLinkTags(self, currentDomen: str) -> List[WebElement]:
@@ -222,9 +228,10 @@ class Driver(Object):
 
         time.sleep(1)
         inputTag.send_keys(Keys.RETURN)
+        inputTag.send_keys(Keys.RETURN)
 
         time.sleep(2)
-        self._driver.find_element_by_xpath('/html/body/div[2]/form/div[4]/div/button').click()
+        # self._driver.find_element_by_xpath('/html/body/div[2]/form/div[4]/div/button').click()
 
         self.log.Info()
         self.log.Info('Гео-локация успешно изменена!')
