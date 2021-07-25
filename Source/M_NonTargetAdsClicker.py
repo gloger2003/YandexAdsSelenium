@@ -6,7 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from Driver import Driver
-from FileManager import GetProxyList, GetReqTextList, GetIgnoredDomensList
+from IOManager import GetProxyList, GetReqTextList, GetIgnoredDomensList
 from Logger import Log
 
 
@@ -15,8 +15,9 @@ class NonTargetAdsClicker:
         self.log = Log()
         self.driver = driver
 
-        self.maxPageCount: int = 2
-        self.maxResidenceTime: int = 20
+        # self.driver.maxPageCount: int = 2
+        # self.driver.maxResidenceTime: int = 20
+        self.isWorked = False
         pass
 
 
@@ -82,7 +83,7 @@ class NonTargetAdsClicker:
                 
             page: int = -1
 
-            while page < self.maxPageCount:
+            while page < self.driver.maxPageCount:
                 page += 1
                 links = self.GetSiteLinks(reqText=reqText, page=page)
 
@@ -113,7 +114,7 @@ class NonTargetAdsClicker:
 
 
                         totalTime = time.time() - startTime
-                        if totalTime >= self.maxResidenceTime:
+                        if totalTime >= self.driver.maxResidenceTime:
                             break
                         self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
 
@@ -136,6 +137,8 @@ class NonTargetAdsClicker:
         pass
 
     def Run(self):
+        self.isWorked = True
+
         self.log.Info()
         self.log.Info('Запущен модуль работы с целевыми доменами')
 
@@ -151,5 +154,7 @@ class NonTargetAdsClicker:
         self.log.Info('Обход нецелевых доменов полностью завершён со всех доступных прокси:')
         self.log.Info(f'- Использованные прокси: {GetProxyList()}')
         self.log.Info(f'- Использованная гео-локация: {self.driver.geo}')
+
+        self.isWorked = False
         pass
 

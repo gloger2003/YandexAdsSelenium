@@ -9,7 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from Driver import Driver
-from FileManager import GetProxyList, GetReqTextList, GetTargetDomensList
+from IOManager import GetProxyList, GetReqTextList, GetTargetDomensList
 from Logger import DEV_MODE, Log
 
 
@@ -18,12 +18,11 @@ class TargetAdsClicker:
         self.log = Log()
         self.driver = driver
 
-        self.maxPageCount: int = 1
-        self.maxResidenceTime: int = 600
+        self.isWorked = False
+        # self.driver.maxPageCount: int = 1
+        # self.driver.maxResidenceTime: int = 600
         pass
 
-    def GetUserInput(self):
-        pass
 
     def GetSiteLinks(self, reqText: str, page: int=0):
 
@@ -80,13 +79,12 @@ class TargetAdsClicker:
 
         return siteLinks
 
-
     def _Run(self, proxy: str='localhost'):
         for reqText in GetReqTextList():
                 
             page: int = -1
 
-            while page < self.maxPageCount:
+            while page < self.driver.maxPageCount:
                 page += 1
                 links = self.GetSiteLinks(reqText=reqText, page=page)
 
@@ -116,7 +114,7 @@ class TargetAdsClicker:
 
 
                         totalTime = time.time() - startTime
-                        if totalTime >= self.maxResidenceTime:
+                        if totalTime >= self.driver.maxResidenceTime:
                             break
                         self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
                 
@@ -133,16 +131,15 @@ class TargetAdsClicker:
         self.log.Info(f'- Использованная гео-локация: {self.driver.geo}')
         self.log.Info(f'- Ссылок пройдено: {len(links)}')
 
-
-
     def Run(self):
+        self.isWorked = True
+
         self.log.Info()
         self.log.Info('Запущен модуль работы с целевыми доменами')
 
         if DEV_MODE:
             self._Run()
         else:
-            self.GetUserInput()
             for proxy in GetProxyList():
                 self.driver.SetProxy(proxy=proxy)
                 self._Run(proxy=proxy)
@@ -151,5 +148,7 @@ class TargetAdsClicker:
         self.log.Info('Обход целевых доменов полностью завершён со всех доступных прокси')
         self.log.Info(f'- Использованные прокси: {GetProxyList()}')
         self.log.Info(f'- Использованная гео-локация: {self.driver.geo}')
+
+        self.isWorked = False
         pass
 

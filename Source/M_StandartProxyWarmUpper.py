@@ -1,31 +1,27 @@
-from selenium.webdriver.remote.webelement import WebElement
-from FileManager import GetProxyListWarmUp, GetReqTextWarmUpList
-from Driver import Driver
+import time
+from pprint import pprint
 from random import randint
+from typing import List, Tuple
+
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
 
+from Driver import Driver
+from IOManager import GetProxyListWarmUp, GetReqTextWarmUpList
 from Logger import DEV_MODE, Log
-
-from typing import List, Tuple
-from pprint import pprint
-
-import time
-
 
 
 class StandartProxyWarmUpper:
     def __init__(self, driver: Driver) -> None:
         self.log = Log()
-
         self.driver = driver
 
-        self.maxVisitCount: int=2
-        self.geo: str = ''
-        self.maxResidenceTime: int = 600
+        self.isWorked = False
 
-        self.proxyList = GetProxyListWarmUp()
+        # self.driver.maxVisitCount: int = 2
+        # self.driver.maxResidenceTime: int = 600
         pass
 
     def GetSiteLinks(self, reqText: str, page: int=0):
@@ -81,9 +77,6 @@ class StandartProxyWarmUpper:
 
         return siteLinks
 
-    def GetUserInput(self):
-        self.geo = input('Введите местоположение или оставьте пустым: ')
-        self.maxVisitCount = input('Введите сколько ссылок нужно пройти для прогрева: ')
 
     def _Run(self, proxy: str='localhost'):
         for reqText in GetReqTextWarmUpList():
@@ -91,7 +84,7 @@ class StandartProxyWarmUpper:
             visittedCount: int = 0
             page: int = -1
 
-            while not visittedCount >= self.maxVisitCount:
+            while not visittedCount >= self.driver.maxVisitCount:
                 page += 1
                 links = self.GetSiteLinks(reqText=reqText, page=page)
 
@@ -99,7 +92,7 @@ class StandartProxyWarmUpper:
                 self.log.Info('Начата эмуляция действий пользователя')
 
                 for link in links:
-                    if visittedCount >= self.maxVisitCount:
+                    if visittedCount >= self.driver.maxVisitCount:
                         break
                     
                     startTime = time.time()
@@ -117,7 +110,7 @@ class StandartProxyWarmUpper:
                                 self.driver.EmulateRandomScroll()
 
                                 totalTime = time.time() - startTime
-                                if totalTime >= self.maxResidenceTime:
+                                if totalTime >= self.driver.maxResidenceTime:
                                     break
 
                             self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
@@ -139,6 +132,8 @@ class StandartProxyWarmUpper:
 
 
     def Run(self):
+        self.isWorked = True
+
         self.log.Info()
         self.log.Info('Начат прогрев прокси')
 
@@ -147,6 +142,9 @@ class StandartProxyWarmUpper:
         else:
             for proxy in GetProxyListWarmUp():
                 self.driver.SetProxy(proxy=proxy)
+                self._Run(proxy)
+        
+        self.isWorked = False
             
 
 

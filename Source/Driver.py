@@ -15,7 +15,7 @@ from selenium.common.exceptions import *
 
 from python_rucaptcha import ImageCaptcha
 
-import FileManager
+import IOManager
 from Logger import Log
 
 
@@ -36,6 +36,10 @@ class Driver(Object):
         self.proxy: str = None
         self.geo: str = None
         self.userAgent: str = None
+
+        self.maxPageCount: int = 1
+        self.maxResidenceTime: int = 100
+        self.maxVisitCount: int = 1
         super().__init__()
 
         self.log.Info('Проверка наличия ChromeDriver...')
@@ -248,7 +252,6 @@ def RUN_TEST():
     driver.SearchRequest('Машинки')
     time.sleep(5)
 
-    driver.NextProxy()
     driver.Get('https://2ip.ru/')
     time.sleep(5)
     

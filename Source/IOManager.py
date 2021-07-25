@@ -1,7 +1,7 @@
 from pprint import pprint
 from Logger import Log
 import os
-from typing import List
+from typing import List, Union
 
 
 DIR_NAME = './PREFS'
@@ -98,6 +98,23 @@ def GetWorkTimingsList() -> List[str]:
 
 def GetSleepTimingsList() -> List[str]:
     return ReadFile(SLEEP_TIMINGS_FILE_NAME).split('\n')
+
+
+def GetUserInput(log: Log, message: str, ConvertTo: Union[int, float, str, bool], defaultValue: Union[int, float, str, bool], errorMessage: str='Неверные данные!', loop: bool=False) -> Union[int, float, str, bool]:
+    while True:
+        try:
+            userValue = input(message)
+            convertedValue = ConvertTo(input(message))
+            return convertedValue
+        except:
+            log.Error(errorMessage)
+            log.Error(f'Значение [{userValue}] невозможно конвертировать в тип [{ConvertTo}]')
+
+            if loop:
+                log.Error('Попробуйте ввести другое значение')
+            else:
+                log.Warning(f'Установлено значение по-умолчанию: {defaultValue}')
+                return defaultValue
 
 
 if __name__ == '__main__':
