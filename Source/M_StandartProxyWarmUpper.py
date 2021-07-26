@@ -19,9 +19,6 @@ class StandartProxyWarmUpper:
         self.driver = driver
 
         self.isWorked = False
-
-        # self.driver.maxVisitCount: int = 2
-        # self.driver.maxResidenceTime: int = 600
         pass
 
     def GetSiteLinks(self, reqText: str, page: int=0):
@@ -76,7 +73,6 @@ class StandartProxyWarmUpper:
                 pass
 
         return siteLinks
-
 
     def _Run(self, proxy: str='localhost'):
         for reqText in GetReqTextWarmUpList():

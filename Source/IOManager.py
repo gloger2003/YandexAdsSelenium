@@ -100,11 +100,11 @@ def GetSleepTimingsList() -> List[str]:
     return ReadFile(SLEEP_TIMINGS_FILE_NAME).split('\n')
 
 
-def GetUserInput(log: Log, message: str, ConvertTo: Union[int, float, str, bool], defaultValue: Union[int, float, str, bool], errorMessage: str='Неверные данные!', loop: bool=False) -> Union[int, float, str, bool]:
+def GetUserInput(message: str, ConvertTo: Union[int, float, str, bool], defaultValue: Union[int, float, str, bool], errorMessage: str='Неверные данные!', loop: bool=False) -> Union[int, float, str, bool]:
     while True:
         try:
-            userValue = input(message)
-            convertedValue = ConvertTo(input(message))
+            userValue = input(f'{message}\nТип: {ConvertTo}\nЗначение по-умолчанию: {defaultValue}\nВаш ввод: ')
+            convertedValue = ConvertTo(userValue)
             return convertedValue
         except:
             log.Error(errorMessage)
@@ -115,6 +115,7 @@ def GetUserInput(log: Log, message: str, ConvertTo: Union[int, float, str, bool]
             else:
                 log.Warning(f'Установлено значение по-умолчанию: {defaultValue}')
                 return defaultValue
+    
 
 
 if __name__ == '__main__':

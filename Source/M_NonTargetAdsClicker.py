@@ -130,9 +130,6 @@ class NonTargetAdsClicker:
             self.log.Info(f'- Ссылок пройдено: {len(links)}')
 
 
-    def GetUserInput(self):
-        pass
-
     def Run(self):
         self.isWorked = True
 
@@ -142,7 +139,6 @@ class NonTargetAdsClicker:
         if self.driver.DEV_MODE:
             self._Run()
         else:
-            self.GetUserInput()
             for proxy in GetProxyList():
                 self.driver.SetProxy(proxy=proxy)
                 self._Run(proxy=proxy)

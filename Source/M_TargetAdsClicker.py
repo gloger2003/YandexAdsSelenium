@@ -10,7 +10,7 @@ from selenium.webdriver.remote.webelement import WebElement
 
 from Driver import Driver
 from IOManager import GetProxyList, GetReqTextList, GetTargetDomensList
-from Logger import DEV_MODE, Log
+from Logger import Log
 
 
 class TargetAdsClicker:

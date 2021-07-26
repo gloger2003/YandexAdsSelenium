@@ -57,8 +57,11 @@ class Driver(Object):
             self.Close()
         except AttributeError:
             pass
+        
 
         if proxy or self.proxy:
+            if not proxy:
+                proxy = self.proxy
             # self._wireOptions['proxy'] = {
             #     'http': proxy, 
             #     'https': proxy,
@@ -73,7 +76,6 @@ class Driver(Object):
             #     'socks5': proxy,
             #     'no_proxy': 'localhost,127.0.0.1'
             # }
-
             if 'socks' in proxy:
                 self._wireOptions['proxy'] = {
                     'socks5': proxy,
@@ -85,6 +87,7 @@ class Driver(Object):
                     'https': proxy,
                     'no_proxy': 'localhost,127.0.0.1'
                 }
+
 
             self.proxy = proxy
 
@@ -117,10 +120,13 @@ class Driver(Object):
             try:
                 self._driver.get(url)
                 break
+            except AttributeError:
+                break
             except Exception as e:
                 self.log.Critical()
                 self.log.Critical(f'Не удалось загрузить страницу:')
                 self.log.Critical(f'- Сообщение об ошибке: {e}')
+                time.sleep(3)
         
         if 'Ой' in self._driver.title:
             self._driver.find_element_by_class_name('CheckboxCaptcha-Button').click()
