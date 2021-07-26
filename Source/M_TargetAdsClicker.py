@@ -55,7 +55,6 @@ class TargetAdsClicker:
         
         self.log.Info('')
         self.log.Info('Запись целевых ссылок и доменов')
-        self.log.Info('')
         for serpItem in newSerpItems:
             siteLinkTags: List[WebElement] = serpItem.find_elements_by_tag_name('a')
             try:
@@ -137,7 +136,7 @@ class TargetAdsClicker:
         self.log.Info()
         self.log.Info('Запущен модуль работы с целевыми доменами')
 
-        if DEV_MODE:
+        if self.driver.DEV_MODE:
             self._Run()
         else:
             for proxy in GetProxyList():

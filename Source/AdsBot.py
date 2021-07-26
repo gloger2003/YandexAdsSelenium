@@ -34,9 +34,14 @@ if __name__ == '__main__':
     
     adsBot.maxResidenceTime = 20
     adsBot.maxPageCount = 2
+    adsBot.maxVisitCount = 3
     adsBot.geo = 'Москва'
 
+    adsBot.DEV_MODE = False
+
     adsBot.CreateNewDriver()
-    adsBot.m_NonTargetAdsClicker.Run()
+    # adsBot.m_TargetAdsClicker.Run()
+    # adsBot.m_NonTargetAdsClicker.Run()
+    adsBot.m_StandartProxyWarmUpper.Run()
 
     time.sleep(5)

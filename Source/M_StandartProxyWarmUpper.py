@@ -109,15 +109,17 @@ class StandartProxyWarmUpper:
                             if self.driver.ClickToRandomLinkTag(internalLinkTags, '-- Переход на внутреннюю ссылку: '):
                                 self.driver.EmulateRandomScroll()
 
-                                totalTime = time.time() - startTime
-                                if totalTime >= self.driver.maxResidenceTime:
-                                    break
-
+                            totalTime = time.time() - startTime
                             self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
                         else:
                             self.log.Info('Пропускаю сайт:')
                             self.log.Info(f'- Ссылка: {link[1]}')
                             self.log.Info(f'- Домен: {link[0]}')
+                            break
+
+                        totalTime = time.time() - startTime
+                        if totalTime >= self.driver.maxResidenceTime:
+                            break
 
                     visittedCount += 1
                 
@@ -137,7 +139,7 @@ class StandartProxyWarmUpper:
         self.log.Info()
         self.log.Info('Начат прогрев прокси')
 
-        if DEV_MODE:
+        if self.driver.DEV_MODE:
             self._Run()
         else:
             for proxy in GetProxyListWarmUp():

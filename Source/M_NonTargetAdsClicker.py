@@ -49,10 +49,7 @@ class NonTargetAdsClicker:
         self.log.Info(f'Кол-во ссылок после форматирования: {len(newSerpItems)}')
         
         self.log.Info('')
-        self.log.Info('Запись целевых ссылок и доменов')
-        self.log.Info('')
-        
-        self.log.Info('Запись ссылок и доменов:')
+        self.log.Info('Запись нецелевых ссылок и доменов')
         for serpItem in newSerpItems:
             siteLinkTags: List[WebElement] = serpItem.find_elements_by_tag_name('a')
             try:

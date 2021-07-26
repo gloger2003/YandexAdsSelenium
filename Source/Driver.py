@@ -59,12 +59,33 @@ class Driver(Object):
             pass
 
         if proxy or self.proxy:
-            self._wireOptions['proxy'] = {
-                'http': proxy, 
-                'https': proxy,
-                'socks5': proxy,
-                'no_proxy': 'localhost,127.0.0.1'
-            }
+            # self._wireOptions['proxy'] = {
+            #     'http': proxy, 
+            #     'https': proxy,
+            #     'socks5': proxy,
+            #     'socks4': proxy.replace('5', '4', 1),
+            #     'no_proxy': 'localhost,127.0.0.1'
+            # }
+
+            # self._wireOptions['proxy'] = {
+            #     'http': proxy, 
+            #     'https': proxy,
+            #     'socks5': proxy,
+            #     'no_proxy': 'localhost,127.0.0.1'
+            # }
+
+            if 'socks' in proxy:
+                self._wireOptions['proxy'] = {
+                    'socks5': proxy,
+                    'no_proxy': 'localhost,127.0.0.1'
+                }
+            elif 'http' in proxy:
+                self._wireOptions['proxy'] = {
+                    'http': proxy, 
+                    'https': proxy,
+                    'no_proxy': 'localhost,127.0.0.1'
+                }
+
             self.proxy = proxy
 
         if incognitoMode or self.incognitoMode:
@@ -189,15 +210,17 @@ class Driver(Object):
         self._driver.close()
 
     def EmulateRandomScroll(self):
+        directions = ['Скролл вниз', 'Скролл вверх']
         self.log.Info(f'-- Начата эмуляция скроллинга страницы')
         for _ in range(3):
-            direction = randint(0, 1)
-            self.log.Info(f'--- {_}. Направление: {direction}')
+            currentDirection = randint(0, 1)
+
+            self.log.Info(f'--- {_}. Направление: {directions[currentDirection]}')
             for _ in range(randint(1, 3)):
                 self._driver.find_element_by_tag_name('body').send_keys(
-                    Keys.PAGE_DOWN if direction == 1 else Keys.PAGE_UP
+                    Keys.PAGE_DOWN if currentDirection == 1 else Keys.PAGE_UP
                 )
-                self.log.Info(f'---- {_}')
+                self.log.Info(f'---- {directions[currentDirection]}: {_}')
                 time.sleep(1)
 
     def SetProxy(self, proxy: str='localhost') -> None:
