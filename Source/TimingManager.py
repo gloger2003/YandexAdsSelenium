@@ -102,8 +102,11 @@ class TimingManager:
 
     def _Run(self):
         while True:
-            if not self.TryToSleep(self.ParseTimingList(GetSleepTimingsList())):
-                self.TryToWork(self.ParseTimingList(GetWorkTimingsList()))
+            if self.adsBot.isSubscribe:
+                if not self.TryToSleep(self.ParseTimingList(GetSleepTimingsList())):
+                    self.TryToWork(self.ParseTimingList(GetWorkTimingsList()))
+            else:
+                quit()
             time.sleep(5)
                 
 

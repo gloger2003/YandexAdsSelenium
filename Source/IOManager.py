@@ -21,6 +21,8 @@ IGNORED_DOMENS_FILE_NAME = f'./{DIR_NAME}/IGNORED_DOMENS.txt'
 WORK_TIMINGS_FILE_NAME = f'./{DIR_NAME}/WORK_TIMINGS.txt'
 SLEEP_TIMINGS_FILE_NAME = f'./{DIR_NAME}/SLEEP_TIMINGS.txt'
 
+AUTH_DATA_FILE_NAME = f'./{DIR_NAME}/AUTH_DATA.txt'
+
 
 if not os.path.exists(DIR_NAME):
     os.mkdir(DIR_NAME)
@@ -98,6 +100,9 @@ def GetWorkTimingsList() -> List[str]:
 
 def GetSleepTimingsList() -> List[str]:
     return ReadFile(SLEEP_TIMINGS_FILE_NAME).split('\n')
+
+def GetAuthData() -> List[str]:
+    return ReadFile(AUTH_DATA_FILE_NAME).split('\n')
 
 
 def GetUserInput(message: str, ConvertTo: Union[int, float, str, bool], defaultValue: Union[int, float, str, bool], errorMessage: str='Неверные данные!', loop: bool=False) -> Union[int, float, str, bool]:

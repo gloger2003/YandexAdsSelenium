@@ -1,6 +1,9 @@
+from threading import Thread
 import time
 
-from IOManager import GetUserInput
+import requests
+
+from IOManager import GetAuthData, GetUserInput
 from Driver import Driver
 
 from M_NonTargetAdsClicker import NonTargetAdsClicker
@@ -16,6 +19,8 @@ class AdsBot(Driver):
         
         self.DEV_MODE = True
         self.currentModule: int = 0
+
+        self.isSubscribe = False
 
 
         self.m_TargetAdsClicker = TargetAdsClicker(self)
@@ -63,6 +68,57 @@ class AdsBot(Driver):
         else:
             self.Run()
 
+    def Exit(self):
+        del self
+        quit()
+
+
+def CloseAdsBot(adsBot: AdsBot):
+    try:
+        adsBot.isSubscribe = False
+        adsBot.Close()
+    except:
+        pass
+    adsBot.Exit()
+
+def CheckSubscribeForever(adsBot: AdsBot):
+    while True:
+        try:
+            authData = GetAuthData()
+            
+            login = authData[0]
+            password = authData[1]
+
+            jsonRes = requests.get(f'http://control-panel123.herokuapp.com/get_user?login={login}&password={password}').json()
+            
+            jsonRes['start_date']
+            jsonRes['finish_date']
+            
+            if jsonRes['status'] == 'OK':
+                if not adsBot.isSubscribe:
+                    adsBot.isSubscribe = True
+                    adsBot.log.Info()
+                    adsBot.log.Info('Подписка успешно подтверждена! Данные подписки:')
+                    adsBot.log.Info(f"- Дата начала: {jsonRes['start_date']}")
+                    adsBot.log.Info(f"- Дата конца: {jsonRes['finish_date']}")
+                    adsBot.log.Info()
+                pass
+            else:
+                adsBot.log.Critical()
+                adsBot.log.Critical('Подписка закончила время действия! Данные подписки:')
+                adsBot.log.Critical(f"- Дата начала: {jsonRes['start_date']}")
+                adsBot.log.Critical(f"- Дата конца: {jsonRes['finish_date']}")
+                adsBot.log.Critical('Выход!')
+                adsBot.log.Critical()
+                CloseAdsBot(adsBot=adsBot)
+        
+        except:
+            adsBot.log.Critical()
+            adsBot.log.Critical('Не удалось подтвердить подписку!')
+            adsBot.log.Critical('Выход!')
+            adsBot.log.Critical()
+            CloseAdsBot(adsBot=adsBot)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
@@ -76,6 +132,9 @@ if __name__ == '__main__':
 
         adsBot.DEV_MODE = False
 
+        Thread(target=CheckSubscribeForever, args=[adsBot]).start()
+
+        time.sleep(5)
         adsBot.Run()
         
         # adsBot.CreateNewDriver()
