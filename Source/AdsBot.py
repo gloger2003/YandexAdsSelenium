@@ -28,7 +28,7 @@ class AdsBot(Driver):
         self.m_StandartProxyWarmUpper = StandartProxyWarmUpper(self)
 
         self.modules = [
-            (self.m_StandartProxyWarmUpper, 'Стандартный модуль прогрева прокси', 'Без описания'),
+            (self.m_StandartProxyWarmUpper, 'Модуль стандартного прогрева прокси', 'Без описания'),
             (self.m_NonTargetAdsClicker, 'Модуль нецелевого обхода', 'Без описания'),
             (self.m_TargetAdsClicker, 'Модуль целевого обхода', 'Без описания')
         ]
@@ -49,24 +49,44 @@ class AdsBot(Driver):
         self.CreateNewDriver()
 
     def ChangeModule(self) -> None:
-        (print(f'{k[1]}: {k[2]}') for k in self.modules)
-        self.currentModule = GetUserInput('Выберите номер модуля', int, self.currentModule)
+        print()
+        [print(f'- {k[1]}: {k[2]}') for k in self.modules]
+        print()
+        self.currentModule = GetUserInput('Выберите номер модуля (1 = 0)', int, self.currentModule)
+        print()
 
-    def Run(self): 
-        mode = GetUserInput(
-            'Выберите раздел:' \
-            '\n1. Перезаписать свойства вебдрайвера' \
-            '\n2. Запустить TimingManager'\
-            '\n3. Сменить запускаемый модуль', int, None)
+    def StartModule(self):
+        print()
+        [print(f'- {k[1]}: {k[2]}') for k in self.modules]
+        print()
+        self.currentModule = GetUserInput('Выберите номер модуля (1 = 0), который хотите запустить', int, self.currentModule)
+        print()
+        self.log.Info(f'[{self.modules[self.currentModule][1]}] назначен запускаемым')
+        self.log.Info('Запуск модуля...')
+        self.modules[self.currentModule][0].Run()
 
-        if mode == 1:
-            pass
-        elif mode == 2:
-            self.timingManager.Run()
-        elif mode == 3:
-            self.ChangeModule()
-        else:
-            self.Run()
+
+    def Run(self):
+        while True:
+            print()
+            mode = GetUserInput(
+                'Выберите раздел:' \
+                '\n1. Перезаписать свойства вебдрайвера' \
+                '\n2. Запустить TimingManager'\
+                '\n3. Сменить запускаемый модуль для TimingManager' \
+                '\n4. Запустить модуль без TimingManager', int, None)
+
+            if mode == 1:
+                self.ReWriteData()
+                pass
+            elif mode == 2:
+                return self.timingManager.Run()
+            elif mode == 3:
+                self.ChangeModule()
+            elif mode == 4:
+                return self.StartModule()
+            else:
+                self.Run()
 
     def Exit(self):
         del self
@@ -91,28 +111,40 @@ def CheckSubscribeForever(adsBot: AdsBot):
 
             jsonRes = requests.get(f'http://control-panel123.herokuapp.com/get_user?login={login}&password={password}').json()
             
-            jsonRes['start_date']
-            jsonRes['finish_date']
             
             if jsonRes['status'] == 'OK':
-                if not adsBot.isSubscribe:
-                    adsBot.isSubscribe = True
-                    adsBot.log.Info()
-                    adsBot.log.Info('Подписка успешно подтверждена! Данные подписки:')
-                    adsBot.log.Info(f"- Дата начала: {jsonRes['start_date']}")
-                    adsBot.log.Info(f"- Дата конца: {jsonRes['finish_date']}")
-                    adsBot.log.Info()
-                pass
-            else:
+                if jsonRes['check']:
+                    if not adsBot.isSubscribe:
+                        adsBot.isSubscribe = True
+                        adsBot.log.Info()
+                        adsBot.log.Info('Подписка успешно подтверждена! Данные подписки:')
+                        adsBot.log.Info(f"- Дата начала: {jsonRes['start_date']}")
+                        adsBot.log.Info(f"- Дата конца: {jsonRes['finish_date']}")
+                        adsBot.log.Info()
+                else:
+                    adsBot.log.Critical()
+                    adsBot.log.Critical('Подписка закончила время действия! Данные подписки:')
+                    adsBot.log.Critical(f"- Дата начала: {jsonRes['start_date']}")
+                    adsBot.log.Critical(f"- Дата конца: {jsonRes['finish_date']}")
+                    adsBot.log.Critical('Выход!')
+                    adsBot.log.Critical()
+                    CloseAdsBot(adsBot=adsBot)
+
+            elif jsonRes['status'] == 'NOT_FOUND_USER':
                 adsBot.log.Critical()
-                adsBot.log.Critical('Подписка закончила время действия! Данные подписки:')
-                adsBot.log.Critical(f"- Дата начала: {jsonRes['start_date']}")
-                adsBot.log.Critical(f"- Дата конца: {jsonRes['finish_date']}")
+                adsBot.log.Critical('Неверный логин или пароль, измените данные в AUTH_DATA.txt!')
                 adsBot.log.Critical('Выход!')
                 adsBot.log.Critical()
                 CloseAdsBot(adsBot=adsBot)
+            else:
+                adsBot.log.Critical()
+                adsBot.log.Critical('К сожалению, мы не нашли ваш профиль в базе данных :(')
+                adsBot.log.Critical('Обратитесь к продавцу для решения данной проблемы')
+                adsBot.log.Critical('Пользоваться юотом без подписки нельзя, поэтому мы его закрываем!')
+                adsBot.log.Critical()
+                CloseAdsBot(adsBot=adsBot)
         
-        except:
+        except Exception as e:
             adsBot.log.Critical()
             adsBot.log.Critical('Не удалось подтвердить подписку!')
             adsBot.log.Critical('Выход!')
@@ -125,12 +157,12 @@ if __name__ == '__main__':
     try:
         adsBot = AdsBot(False)
         
-        adsBot.maxResidenceTime = 20
-        adsBot.maxPageCount = 2
+        adsBot.maxResidenceTime = 20 # Это макс время пребывания на сайте (домене...) поэтому так быстро и проходит по ним
+        adsBot.maxPageCount = 2 # Макс кол-во страниц в поиске, по которым он проходится 
         adsBot.maxVisitCount = 3
         adsBot.geo = 'Москва'
 
-        adsBot.DEV_MODE = False
+        adsBot.DEV_MODE = True
 
         Thread(target=CheckSubscribeForever, args=[adsBot]).start()
 
