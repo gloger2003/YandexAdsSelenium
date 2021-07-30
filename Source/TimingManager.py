@@ -66,17 +66,19 @@ class TimingManager:
                     return True
             else:
                 self.log.Info('Пустой тайминг в SLEEP_TIMINGS')
-        
-        self.log.Debug('Переходить в сон не нужно!')
+
+        if not self.moduleData[0].isWorked:
+            self.log.Debug('Переходить в сон не нужно!')
         return False
 
     def TryToWork(self, timings: List[Tuple[datetime.time, datetime.time]]) -> bool:
         now = datetime.datetime.now().time()
 
-        self.log.Debug(f'Начата проверка на запуск модуля:')
-        self.log.Debug(f'- Имя модуля: {self.moduleData[1]}')
-        self.log.Debug(f'- Индекс модуля: {self.adsBot.currentModule}')
-        self.log.Debug(f'- Описание модуля: {self.moduleData[2]}')
+        if not self.moduleData[0].isWorked:
+            self.log.Debug(f'Начата проверка на запуск модуля:')
+            self.log.Debug(f'- Имя модуля: {self.moduleData[1]}')
+            self.log.Debug(f'- Индекс модуля: {self.adsBot.currentModule}')
+            self.log.Debug(f'- Описание модуля: {self.moduleData[2]}')
 
         for timing in timings:
             if timing:

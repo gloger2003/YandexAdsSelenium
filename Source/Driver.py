@@ -25,8 +25,8 @@ class Object:
         
         pass
 
-RUCAPTCHA_KEY = '8d7c6cb7d5e9223165451134353fcdd2'
-
+# RUCAPTCHA_KEY = '8d7c6cb7d5e9223165451134353fcdd2'
+RUCAPTCHA_KEY = IOManager.GetRucaptchaKey()
 
 class Driver(Object):
     def __init__(self, incognitoMode: bool=False) -> None:
@@ -45,13 +45,15 @@ class Driver(Object):
         self.log.Info('Проверка наличия ChromeDriver...')
         chromedriver_autoinstaller.install()
 
-        self.CreateNewDriver()
+        # self.CreateNewDriver()
 
 
     def CreateNewDriver(self, proxy: str=None, incognitoMode: bool=False, geo: str=None, userAgent: str=None):
         self._wireOptions = {}
         self._options = ChromeOptions()
         self._options.add_argument('--ignore-certificate-errors-spki-list')
+        self._options.add_argument('--disable-logging')
+        self._options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
         try:
             self.Close()
@@ -62,20 +64,7 @@ class Driver(Object):
         if proxy or self.proxy:
             if not proxy:
                 proxy = self.proxy
-            # self._wireOptions['proxy'] = {
-            #     'http': proxy, 
-            #     'https': proxy,
-            #     'socks5': proxy,
-            #     'socks4': proxy.replace('5', '4', 1),
-            #     'no_proxy': 'localhost,127.0.0.1'
-            # }
 
-            # self._wireOptions['proxy'] = {
-            #     'http': proxy, 
-            #     'https': proxy,
-            #     'socks5': proxy,
-            #     'no_proxy': 'localhost,127.0.0.1'
-            # }
             if 'socks' in proxy:
                 self._wireOptions['proxy'] = {
                     'socks5': proxy,
@@ -87,7 +76,6 @@ class Driver(Object):
                     'https': proxy,
                     'no_proxy': 'localhost,127.0.0.1'
                 }
-
 
             self.proxy = proxy
 
@@ -106,7 +94,7 @@ class Driver(Object):
         self.log.Info(f'- Гео-локация: {self.geo}')
         self.log.Info(f'- Режим инкогнито: {incognitoMode}')
 
-        self._driver = Chrome(seleniumwire_options=self._wireOptions, options=self._options)
+        self._driver = Chrome(seleniumwire_options=self._wireOptions, options=self._options, service_log_path='NUL')
         self.log.Info('Новая копия успешно запущена!')
 
         if self.geo or geo:
@@ -116,18 +104,27 @@ class Driver(Object):
         self.log.Info()
         self.log.Info(f'Загрузка новой ссылки: {url}')
 
-        while True:
+        loadAttemsCount = 0
+        while loadAttemsCount < 5:
             try:
                 self._driver.get(url)
                 break
             except AttributeError:
                 break
             except Exception as e:
+                loadAttemsCount += 1
+
                 self.log.Critical()
                 self.log.Critical(f'Не удалось загрузить страницу:')
                 self.log.Critical(f'- Сообщение об ошибке: {e}')
+                self.log.Critical(f'- Прокси: {self.proxy}')
+                self.log.Critical(f'- Попытка: {loadAttemsCount}')
+
                 time.sleep(3)
         
+        self.TryFindCaptcha(url)
+        
+    def TryFindCaptcha(self, url: str):
         if 'Ой' in self._driver.title:
             self._driver.find_element_by_class_name('CheckboxCaptcha-Button').click()
             time.sleep(3)

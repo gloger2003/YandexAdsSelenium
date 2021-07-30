@@ -20,10 +20,9 @@ class Log:
     fileName = f'{dirName}/{logDate}.log'
 
     Now = lambda _: time.strftime('%H:%M:%S %d-%m-%Y')
-    FormatToLog = lambda _, date, level, message: f'[{date}]{level} {message}'
+    FormatToLog = lambda _, date, level, message: f'[{date}]{level} {message}'.replace('\n', ' ')
 
     def __init__(self) -> None:
-        
         if DEV_MODE:
             shutil.rmtree(self.dirName)
 
@@ -41,7 +40,7 @@ class Log:
                 f.write(f'{log}\n')
         except FileNotFoundError:
             open(self.fileName, 'w', encoding='utf-8').close()
-            print(f"\n{self.FormatToLog(self.Now(), self.Level.CRITICAL, 'Лог был удалён, был создан новый!')}\n")
+            print(f"\n{self.FormatToLog(self.Now(), self.Level.CRITICAL, 'Предыдущий лог не найден, поэтому создан новый!')}\n")
         except Exception as e:
             print(f"\n{self.FormatToLog(self.Now(), self.Level.CRITICAL, 'Не удалось записать лог! {e}')}\n")
 

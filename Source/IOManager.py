@@ -22,6 +22,7 @@ WORK_TIMINGS_FILE_NAME = f'./{DIR_NAME}/WORK_TIMINGS.txt'
 SLEEP_TIMINGS_FILE_NAME = f'./{DIR_NAME}/SLEEP_TIMINGS.txt'
 
 AUTH_DATA_FILE_NAME = f'./{DIR_NAME}/AUTH_DATA.txt'
+RUCAPTCHA_KEY_FILE_NAME = f'./{DIR_NAME}/RUCAPTCHA_KEY.txt'
 
 
 if not os.path.exists(DIR_NAME):
@@ -103,6 +104,9 @@ def GetSleepTimingsList() -> List[str]:
 
 def GetAuthData() -> List[str]:
     return ReadFile(AUTH_DATA_FILE_NAME).split('\n')
+
+def GetRucaptchaKey() -> str:
+    return ReadFile(RUCAPTCHA_KEY_FILE_NAME).split('\n')[0].strip()
 
 
 def GetUserInput(message: str, ConvertTo: Union[int, float, str, bool], defaultValue: Union[int, float, str, bool], errorMessage: str='Неверные данные!', loop: bool=False) -> Union[int, float, str, bool]:

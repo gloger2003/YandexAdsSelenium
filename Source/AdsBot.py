@@ -1,15 +1,15 @@
-from threading import Thread
+import os
+import sys
 import time
+from threading import Thread
 
 import requests
 
-from IOManager import GetAuthData, GetUserInput
 from Driver import Driver
-
+from IOManager import GetAuthData, GetUserInput
 from M_NonTargetAdsClicker import NonTargetAdsClicker
 from M_StandartProxyWarmUpper import StandartProxyWarmUpper
 from M_TargetAdsClicker import TargetAdsClicker
-
 from TimingManager import TimingManager
 
 
@@ -55,7 +55,7 @@ class AdsBot(Driver):
         self.currentModule = GetUserInput('Выберите номер модуля (1 = 0)', int, self.currentModule)
         print()
 
-    def StartModule(self):
+    def StartModuleWithoutTimingManager(self):
         print()
         [print(f'- {k[1]}: {k[2]}') for k in self.modules]
         print()
@@ -63,6 +63,7 @@ class AdsBot(Driver):
         print()
         self.log.Info(f'[{self.modules[self.currentModule][1]}] назначен запускаемым')
         self.log.Info('Запуск модуля...')
+        self.CreateNewDriver()
         self.modules[self.currentModule][0].Run()
 
 
@@ -84,7 +85,7 @@ class AdsBot(Driver):
             elif mode == 3:
                 self.ChangeModule()
             elif mode == 4:
-                return self.StartModule()
+                return self.StartModuleWithoutTimingManager()
             else:
                 self.Run()
 
@@ -99,7 +100,8 @@ def CloseAdsBot(adsBot: AdsBot):
         adsBot.Close()
     except:
         pass
-    adsBot.Exit()
+    os._exit(0)
+    # adsBot.Exit()
 
 def CheckSubscribeForever(adsBot: AdsBot):
     while True:
@@ -175,8 +177,12 @@ if __name__ == '__main__':
         # adsBot.m_StandartProxyWarmUpper.Run()
 
         time.sleep(5)
+    
+    except SystemExit:
+        CloseAdsBot(adsBot)
 
     except Exception as e:
+        print(e)
         if not adsBot.DEV_MODE: 
             adsBot.log.Critical(e)
             raise e
