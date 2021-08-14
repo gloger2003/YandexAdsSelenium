@@ -2,6 +2,7 @@ from seleniumwire.webdriver import Chrome
 import chromedriver_autoinstaller
 import time
 
+
 chromedriver_autoinstaller.install()
 
 proxy = 'http://8eKePS:8AtuC3CUy2ub@z.mobileproxy.space:64029'

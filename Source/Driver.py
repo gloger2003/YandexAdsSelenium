@@ -1,19 +1,20 @@
-import json
-import logging
 import os
+import random
 import time
 from pprint import pprint
 from random import randint
 from typing import List, Tuple
 
 import chromedriver_autoinstaller
+import numpy as np
+import scipy.interpolate as si
 import selenium
+from python_rucaptcha import ImageCaptcha
+from selenium.common.exceptions import *
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from seleniumwire.webdriver import Chrome, ChromeOptions
-from selenium.common.exceptions import *
-
-from python_rucaptcha import ImageCaptcha
 
 import IOManager
 from Logger import Log
@@ -267,6 +268,70 @@ class Driver(Object):
             self._driver.quit()
         except:
             pass
+
+    def EmulateCursorMove(self):
+        
+        w = self._driver.execute_script('return window.innerWidth')
+        h = self._driver.execute_script('return window.innerHeight')
+
+        x = random.randint(w // 10, w)
+        y = random.randint(h // 10, h)
+        
+        # Curve base:
+        points = [[0, 0], [0, 2], [2, 3], [8, 8], [6, 3], [8, 2], [8, 0]];
+        points = np.array(points)
+
+        x = points[:,0]
+        y = points[:,1]
+
+
+        t = range(len(points))
+        ipl_t = np.linspace(0.0, len(points) - 1, 100)
+
+        x_tup = si.splrep(t, x, k=3)
+        y_tup = si.splrep(t, y, k=3)
+
+        x_list = list(x_tup)
+        xl = x.tolist()
+        x_list[1] = xl + [0.0, 0.0, 0.0, 0.0]
+
+        y_list = list(y_tup)
+        yl = y.tolist()
+        y_list[1] = yl + [0.0, 0.0, 0.0, 0.0]
+
+        x_i = si.splev(ipl_t, x_list) # x interpolate values
+        y_i = si.splev(ipl_t, y_list) # y interpolate values
+
+        action =  ActionChains(self._driver)
+
+        # pprint(self._driver.find_elements_by_tag_name('div'))
+        startElement = random.choice(self._driver.find_elements_by_tag_name('div'))
+
+        # # First, go to your start point or Element:
+        # action.move_to_element(startElement)
+        # action.perform()
+
+        self.log.Info('Начата эмуляцию движений мыши с помощью интерполяции')
+
+        for mouse_x, mouse_y in zip(x_i, y_i):
+            try:
+                action.move_by_offset(mouse_x, mouse_y)
+                action.perform()     
+            except Exception as e:
+                self.log.Error()
+                self.log.Error(f'Ошибка при установки курсора в точку:') 
+                self.log.Error(f'- X: {mouse_x}')
+                self.log.Error(f'- Y: {mouse_y}')
+                self.log.Error(f'- Ошибка: {e}')
+            else:
+                self.log.Info()
+                self.log.Info(f'Установлен курсор в точку:') 
+                self.log.Info(f'- X: {mouse_x}')
+                self.log.Info(f'- Y: {mouse_y}')
+        
+        self.log.Info('Конец эмуляции движений курсора')
+
+
 
 
 def RUN_TEST():

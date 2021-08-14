@@ -85,6 +85,8 @@ class TargetAdsClicker:
 
             while page < self.driver.maxPageCount:
                 page += 1
+                self.driver.ClearAllCookies()
+                
                 links = self.GetSiteLinks(reqText=reqText, page=page)
 
                 self.log.Info()
@@ -96,9 +98,12 @@ class TargetAdsClicker:
                     self.log.Info(f'- Ссылка: {link[1]}')
                     self.log.Info(f'- Домен: {link[0]}')
                     
-                    while True:
-                        self.driver.Get(link[1])
+                    self.driver.Get(link[1])
 
+                    while True:
+                        self.driver.EmulateRandomScroll()
+                        self.driver.EmulateCursorMove()
+                        
                         internalLinkTags = self.driver.GetInternalLinkTags(link[0])
 
                         if internalLinkTags:   
@@ -106,17 +111,19 @@ class TargetAdsClicker:
                                 self.driver.EmulateRandomScroll()
 
                         else:
-                            self.log.Info('Пропускаю сайт:')
-                            self.log.Info(f'- Ссылка: {link[1]}')
-                            self.log.Info(f'- Домен: {link[0]}')
-                            break
+                            self.log.Info()
+                            self.log.Info('Внутренних ссылок нет. Жду 5 сек.')
+
+                            time.sleep(5)
+                            pass
 
 
                         totalTime = time.time() - startTime
                         if totalTime >= self.driver.maxResidenceTime:
                             break
                         self.log.Info(f'Время пребывания на данный момент: {totalTime}s')
-                
+                        
+                    totalTime = time.time() - startTime
                     self.log.Info()
                     self.log.Info(f'Эмуляция действий на сайте окончена:')
                     self.log.Info(f'- Домен: {link[0]}:')
@@ -150,4 +157,3 @@ class TargetAdsClicker:
 
         self.isWorked = False
         pass
-
