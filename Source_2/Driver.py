@@ -3,25 +3,25 @@ from __future__ import annotations
 import os
 import random
 import time
-from collections import namedtuple
-from pprint import pformat, pprint
-from random import choice, randint
-from typing import List, Tuple, Union
+from random import randint
+from typing import Any, NamedTuple, Union
 
 import chromedriver_autoinstaller
 import numpy as np
 import scipy.interpolate as si
-import selenium
+from fake_useragent import UserAgent
 from loguru import logger
 from python_rucaptcha import ImageCaptcha
 from selenium.common.exceptions import *
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.wait import WebDriverWait
 from seleniumwire.webdriver import Chrome, ChromeOptions
 
-import IOUtils
-from DataTypes import UrlData
+import io_utils
+from datatypes import UrlData
+from pprint import pprint
 
 
 class YandexSE:
@@ -66,58 +66,64 @@ class YandexSE:
         return self.driver.go_to_url(f'https://yandex.ru/search/?'
                                      f'text={text}&p={page}')
 
-    def get_all_urls_data(self) -> list[UrlData]:
+    def _get_all_urls_data(self) -> list[UrlData]:
         """ Формирует и возвращает `list[UrlData]` из всей поисковой выдачи """
-
-        # Все блоки с поисковой выдачи,
-        # имеющие ссылку на сайт
-        blocks = self.driver.find_elements_by_xpath(
-            '//li[@class="serp-item"]')
+        time.sleep(5)
+        # Блоки с ссылками на сайты,
+        # выданные поисковиком
+        blocks: list[WebElement] = self.driver.find_elements_by_xpath(
+            '//li[@class="serp-item desktop-card"]')
 
         urls_data: list[UrlData] = []
         for block in blocks:
+            # try:
+            # Все ссылки, содержащиеся в блоке
+            # a_tags[0] - Главная ссылка
+            # a_tags[1] - Подглавная ссылка
+            a_tags = block.find_elements_by_tag_name('a')
+
             try:
-                # Все ссылки, содержащиеся в блоке
-                # a_tags[0] - Главная ссылка
-                # a_tags[1] - Подглавная ссылка
-                a_tags = block.find_elements_by_tag_name('a')
-
-                try:
-                    # Слово "реклама" под ссылкой
-                    ads_label = block.find_element_by_xpath(
-                        './/div[@class="Label Label_theme_direct '
-                        'Organic-Label Organic-Label_direct '
-                        'label label_theme_direct"]')
-                except NoSuchElementException:
-                    # В случае если блок не найден
-                    ads_label = False
-                else:
-                    ads_label = True
-
+                # Этот элемент есть только у рекламы
+                # там находится слово "Реклама"
+                block.find_element_by_xpath(
+                    './/span[@class="organic__advLabel"]')
+            except NoSuchElementException:
+                is_ads = False
+            else:
+                is_ads = True
+            finally:
                 title = a_tags[0].text
                 url = a_tags[0].get_attribute('href')
                 # Сам домен указан в отдельном блоке "b"
-                domen = a_tags[1].find_element_by_tag_name('b').text
-                is_ads = ads_label
-
-            except Exception as e:
-                # Игнорим ошибки, т.к. они нам не важны
-                pass
-            else:
+                # Поэтому нужно разделить текст в сабтайтл блоке
+                domen = a_tags[1].text.split('›')[0]
                 urls_data.append(
                     UrlData(title, url, domen, is_ads, a_tags[0]))
+        return urls_data
+
+    def get_all_urls_data(self) -> list[UrlData]:
+        """ `[Обёртка для YandexSE._get_all_urls_data()]` \n
+            Формирует и возвращает `list[UrlData]` из всей поисковой выдачи """
+        urls_data: list[UrlData] = []
+        try:
+            urls_data = self._get_all_urls_data()
+        except Exception as e:
+            logger.error(e)
         return urls_data
 
     def get_target_ads_urls_data(self) -> list[UrlData]:
         """ Возвращает `list[UrlData]`, в котором только целевые домены"""
 
         # Домены, которые нужно оставить
-        target_domens = IOUtils.get_target_domens()
+        target_domens = io_utils.get_target_domens()
         urls_data = self.get_all_urls_data()
 
         # Форматированный список
         new_urls_data: list[UrlData] = []
         for url_data in urls_data:
+            if not url_data.is_ads:
+                # logger.debug(url_data.domen)
+                continue
             # Указывает, является ли домен целевым
             is_targeted = False
             for target_domen in target_domens:
@@ -134,7 +140,7 @@ class YandexSE:
     def get_non_target_ads_urls_data(self) -> list[UrlData]:
         """ Возвращает `list[UrlData]` без игнорируемых доменов """
         # Домены, которые нужно исключить
-        ignored_domens = IOUtils.get_ignored_domens()
+        ignored_domens = io_utils.get_ignored_domens()
         urls_data = self.get_all_urls_data()
 
         # Форматированный список
@@ -154,6 +160,7 @@ class YandexSE:
 
     def get_seo_urls_data(self) -> list[UrlData]:
         """ Возвращает `list[UrlData]` только из SEO-выдачи"""
+        pprint(self.get_all_urls_data())
         return [k for k in self.get_all_urls_data() if not k.is_ads]
 
 
@@ -162,18 +169,18 @@ class Page:
         self.driver = driver
 
     def emulate_random_scrolling(self):
-        directions = ['Скролл вниз', 'Скролл вверх']
+        directions = ['Скролл вверх', 'Скролл вниз']
         logger.info(f'-- Начата эмуляция скроллинга страницы')
         for _ in range(3):
-            currentDirection = randint(0, 1)
+            current_direction = randint(0, 1)
 
             logger.debug(
-                f'--- {_}. Направление: {directions[currentDirection]}')
+                f'--- {_}. Направление: {directions[current_direction]}')
             for _ in range(randint(1, 3)):
-                self.driver.find_element_by_tag_name('body').send_keys(
-                    Keys.PAGE_DOWN if currentDirection == 1 else Keys.PAGE_UP
+                self.driver.driver.find_element_by_tag_name('body').send_keys(
+                    Keys.PAGE_DOWN if current_direction == 1 else Keys.PAGE_UP
                 )
-                logger.info(f'---- {directions[currentDirection]}: {_}')
+                logger.info(f'---- {directions[current_direction]}: {_}')
                 time.sleep(1)
 
     def emulate_cursor_moving(self):
@@ -184,14 +191,15 @@ class Page:
         y = random.randint(h // 10, h)
 
         # Curve base:
-        points = [[0, 0], [0, 2], [2, 3], [8, 8], [6, 3], [8, 2], [8, 0]]
+        points = [[0, 0], [0, 2], [2, 3],
+                  [8, 8], [6, 3], [8, 2], [8, 0]]
         points = np.array(points)
 
         x = points[:, 0]
         y = points[:, 1]
 
         t = range(len(points))
-        ipl_t = np.linspace(0.0, len(points) - 1, 100)
+        ipl_t = np.linspace(0.0, len(points) - 1, 10)
 
         x_tup = si.splrep(t, x, k=3)
         y_tup = si.splrep(t, y, k=3)
@@ -207,11 +215,11 @@ class Page:
         x_i = si.splev(ipl_t, x_list)  # x interpolate values
         y_i = si.splev(ipl_t, y_list)  # y interpolate values
 
-        action = ActionChains(self.driver)
+        action = ActionChains(self.driver.driver)
 
         try:
-            startElement = random.choice(
-                self.driver.find_elements_by_tag_name('div'))
+            start_element = random.choice(
+                self.driver.driver.find_elements_by_tag_name('div'))
         except (NoSuchElementException,
                 ElementNotInteractableException,
                 ElementNotVisibleException,
@@ -219,10 +227,10 @@ class Page:
             logger.debug('Не удалось установить '
                          'стартовую позицию для курсора')
         else:
-            action.move_to_element(startElement)
+            action.move_to_element(start_element)
             action.perform()
 
-        logger.info('Начата эмуляцию движений '
+        logger.info('Начата эмуляция движений '
                     'мыши с помощью интерполяции')
 
         for mouse_x, mouse_y in zip(x_i, y_i):
@@ -230,11 +238,11 @@ class Page:
                 action.move_by_offset(mouse_x, mouse_y)
                 action.perform()
             except Exception as e:
-                logger.Error()
-                logger.Error(f'Ошибка при установки курсора в точку:')
-                logger.Error(f'- X: {mouse_x}')
-                logger.Error(f'- Y: {mouse_y}')
-                logger.Error(f'- Ошибка: {e}')
+                logger.error(f'Ошибка при установки курсора в точку:')
+                logger.error(f'- X: {mouse_x}')
+                logger.error(f'- Y: {mouse_y}')
+                logger.error(f'- Ошибка: {e}')
+                break
             else:
                 logger.info(f'Установлен курсор в точку:')
                 logger.info(f'- X: {mouse_x}')
@@ -278,7 +286,7 @@ class Page:
     def try_solve_yandex_captcha(self, url: str) -> bool:
         try:
             if 'Ой' in self.driver.title():
-                rucaptcha_key = IOUtils.get_rucaptcha_key()
+                rucaptcha_key = io_utils.get_rucaptcha_key()
                 if rucaptcha_key != '':
                     return self.solve_yandex_captcha(url, rucaptcha_key)
                 else:
@@ -288,26 +296,10 @@ class Page:
             return False
         return True
 
-    def get_internal_link_tags(self,
-                               current_domen: str = None) -> List[WebElement]:
+    def get_internal_link_tags(self) -> list[WebElement]:
         try:
             internal_link_tags = [
-                k for k in self.driver.find_elements_by_tag_name('a')]
-
-            # new_internal_link_tags = []
-
-            # for link_tag in internal_link_tags:
-            #     try:
-            #         if current_domen in (link_tag.get_attribute('href') and
-            #                              link_tag.get_attribute(
-            #                                  "target") == ''):
-            #             new_internal_link_tags.append(link_tag)
-            #     except StaleElementReferenceException:
-            #         pass
-            #     except TypeError:
-            #         raise AttributeError
-            # return internal_link_tags
-
+                k for k in self.driver.driver.find_elements_by_tag_name('a')]
         except (AttributeError, NoSuchElementException):
             logger.warning('Не удалось получить внутренние ссылки!')
             return []
@@ -321,19 +313,20 @@ class Page:
             return False
         else:
             try:
-                self.driver.switch_to.window(
-                    window_name=self.driver.window_handles[1])
-                self.driver.close()
+                self.driver.driver.switch_to.window(
+                    window_name=self.driver.driver.window_handles[1])
+                self.driver.close_driver()
 
-                self.driver.switch_to.window(
-                    window_name=self.driver.window_handles[0])
+                self.driver.driver.switch_to.window(
+                    window_name=self.driver.driver.window_handles[0])
             except Exception:
                 pass
         return True
 
     def click_to_random_link_tag(self,
-                                 link_tags: List[WebElement],
+                                 link_tags: list[WebElement],
                                  info: str) -> bool:
+        """ Переходит по любой ссылке на странице """
         for _ in range(20):
             if self.go_to_internal_page(
                     random.choice(link_tags)):
@@ -377,13 +370,20 @@ class Driver:
         if incognito_mode or self.incognito_mode:
             self.incognito_mode = incognito_mode \
                 if incognito_mode else self.incognito_mode
-            self.options.add_argument('--incognito')
+            self.chrome_options.add_argument('--incognito')
 
     def _set_user_agent(self, user_agent: str) -> None:
-        if user_agent or self.user_agent:
-            self.user_agent = user_agent \
-                if user_agent else self.user_agent
-            self.options.add_argument(f'--user-agent={self.user_agent}')
+        # if user_agent or self.user_agent:
+        #     self.user_agent = user_agent \
+        #         if user_agent else self.user_agent
+        #     self.chrome_options.add_argument(f'--user-agent={self.user_agent}')
+        try:
+            ua = UserAgent()
+            self.chrome_options.add_argument(f'--user-agent={ua.random}')
+        except Exception as e:
+            logger.warning('Не удалось установить рандомный Юзер-агент')
+            logger.error(e)
+            pass
 
     def _set_geo(self, geo: str) -> None:
         if geo or self.geo:
@@ -391,17 +391,54 @@ class Driver:
                 if geo else self.geo
             self.set_geo_location(self.geo)
 
-    def _set_sub_options(self) -> None:
-        self.options.add_argument(
+    def _set_options(self) -> None:
+        self.chrome_options.add_argument(
+            '--ignore-ssl-errors')
+        self.chrome_options.add_argument(
             '--ignore-certificate-errors-spki-list')
-        self.options.add_argument(
+        self.chrome_options.add_argument(
             '--disable-logging')
-        self.options.add_experimental_option(
+        self.chrome_options.add_experimental_option(
             "excludeSwitches", ["disable-logging"])
+        self.chrome_options.add_argument("--incognito")
+        self.chrome_options.add_experimental_option(
+            "excludeSwitches", ["enable-logging"])
+        self.chrome_options.add_experimental_option(
+            'useAutomationExtension', False)
+        self.chrome_options.add_experimental_option(
+            "excludeSwitches", ["enable-automation"])
+        self.chrome_options.add_argument("--disable-blink-features")
+        self.chrome_options.add_argument(
+            "--disable-blink-features=AutomationControlled")
+        # self.chrome_options.add_argument("--disable-dev-shm-usage")
+        self.chrome_options.add_argument("--no-sandbox")
+        # self.chrome_options.add_experimental_option("prefs", {
+        #     "download.default_directory": os.path.abspath('.'),
+        #     "download.prompt_for_download": False,
+        #     "download.directory_upgrade": True,
+        # })
+        # self.chrome_options.add_argument("--headless")
 
-    def title(self):
-        """ Возвращает текущий заголовок открытой вкладки """
-        return self.driver.title
+    def _create_new_driver(self):
+        self._set_options()
+        self.driver = Chrome(seleniumwire_options=self.wire_options,
+                             chrome_options=self.chrome_options,
+                             service_log_path='NUL')
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
+                    const newProto = navigator.__proto__
+                    delete newProto.webdriver
+                    navigator.__proto__ = newProto
+                    """
+            }
+        )
+
+        size = (random.randint(1000, 1920),
+                random.randint(900, 1020))
+        self.driver.set_window_size(*size)
+
+        return self.driver
 
     def create_new_driver(self,
                           proxy: str = None,
@@ -410,16 +447,14 @@ class Driver:
                           user_agent: str = None):
 
         self.wire_options = {}
-        self.options = ChromeOptions()
+        self.chrome_options = ChromeOptions()
 
-        self._set_sub_options()
         self._set_proxy(proxy)
         self._set_incognito_mode(incognito_mode)
         self._set_user_agent(user_agent)
 
-        self.close()
-        self.driver = Chrome(seleniumwire_options=self.wire_options,
-                             options=self.options, service_log_path='NUL')
+        self.close_driver()
+        self.driver = self._create_new_driver()
 
         self.page = Page(self)
         self.yandex_se = YandexSE(self)
@@ -432,7 +467,8 @@ class Driver:
         logger.debug(f'- Гео-локация: {self.geo}')
         logger.debug(f'- Режим инкогнито: {self.incognito_mode}')
 
-    def close(self):
+    def close_driver(self):
+        """ Закрывает окно браузера """
         try:
             self.driver.quit()
         except AttributeError:
@@ -479,6 +515,22 @@ class Driver:
 
     def find_elements_by_xpath(self, xpath: str) -> list[WebElement]:
         return self.driver.find_elements_by_xpath(xpath)
+
+    def find_element_by_tag_name(self, tag_name: str) -> WebElement:
+        return self.driver.find_element_by_tag_name(tag_name)
+
+    def find_elements_by_tag_name(self, tag_name: str) -> list[WebElement]:
+        return self.driver.find_elements_by_tag_name(tag_name)
+
+    def title(self):
+        """ Возвращает текущий заголовок открытой вкладки """
+        return self.driver.title
+
+    def execute_script(self, script: str, *args) -> Any:
+        return self.driver.execute_script(script, *args)
+
+    def get_page_source(self) -> str:
+        return self.driver.execute_script("return document.body.outerHTML;")
 
 
 if __name__ == '__main__':

@@ -51,7 +51,7 @@ class TimingManager:
 
                 if start < now < stop:
                     try:
-                        self.adsBot.Close()
+                        self.adsBot.close_driver()
                         self.adsBot._driver = None
                     except:
                         self.adsBot._driver = None
