@@ -1,2 +1,0 @@
-http://control-panel123.herokuapp.com/?token=QWE32GH46TW1QU67YHXE3ZXLKT5BNGHUIORWQZX
-http://control-panel123.herokuapp.com/get_user?login=Vlad&password=123545
