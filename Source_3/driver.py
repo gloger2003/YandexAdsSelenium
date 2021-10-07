@@ -37,15 +37,26 @@ class YandexSE:
             # Поле с указанием города
             input_tag = self.driver.find_element_by_id('city__front-input')
             input_tag.clear()
-            input_tag.send_keys(geo)
+            for ch in geo:
+                input_tag.send_keys(ch)
 
             # Ждём прогрузки выпадающего списка
             time.sleep(2)
 
-            # Выпадает список и мы выбираем первый вариант Press(<Enter>)
-            input_tag.send_keys(Keys.RETURN)
-            # Еще раз Press(<Enter>), чтобы подтвердить и перезагрузиться
-            input_tag.send_keys(Keys.RETURN)
+            popup_div = self.driver.find_element_by_class_name(
+                'popup__content')
+
+            for li in popup_div.find_elements_by_tag_name('li'):
+                title = li.find_element_by_xpath(
+                    './/div[@class="b-autocomplete-item__reg"]').text
+                if title.strip() == geo:
+                    li.click()
+                continue
+
+            # # Выпадает список и мы выбираем первый вариант Press(<Enter>)
+            # input_tag.send_keys(Keys.RETURN)
+            # # Еще раз Press(<Enter>), чтобы подтвердить и перезагрузиться
+            # input_tag.send_keys(Keys.RETURN)
         except Exception as e:
             logger.error('Не удалось сменить гео-локацию!')
             logger.error(e)
@@ -255,6 +266,7 @@ class Page:
         self.emulate_random_scrolling()
 
     def solve_yandex_captcha(self, url: str, rucaptcha_key: str) -> bool:
+        time.sleep(5)
         self.driver.find_element_by_class_name(
             'CheckboxCaptcha-Button').click()
         time.sleep(3)
@@ -270,11 +282,11 @@ class Page:
 
         if not user_answer['error']:
             # решение капчи
-            self.driver.find_element_by_name(
-                'rep').send_keys(user_answer['captchaSolve'])
-            self.driver.find_element_by_name(
-                'rep').send_keys(Keys.RETURN)
-            self.driver.get(url)
+            self.driver.find_element_by_class_name(
+                'Textinput-Control').send_keys(user_answer['captchaSolve'])
+            self.driver.find_element_by_class_name(
+                'Textinput-Control').send_keys(Keys.RETURN)
+            self.driver.go_to_url(url)
             return True
 
         else:
@@ -391,7 +403,7 @@ class Driver:
                 if geo else self.geo
             self.set_geo_location(self.geo)
 
-    def _set_options(self) -> None:
+    def _init_options(self) -> None:
         self.chrome_options.add_argument(
             '--ignore-ssl-errors')
         self.chrome_options.add_argument(
@@ -417,10 +429,10 @@ class Driver:
         #     "download.prompt_for_download": False,
         #     "download.directory_upgrade": True,
         # })
-        self.chrome_options.add_argument("--headless")
+        # self.chrome_options.add_argument("--headless")
 
     def _create_new_driver(self):
-        self._set_options()
+        self._init_options()
         self.driver = Chrome(seleniumwire_options=self.wire_options,
                              chrome_options=self.chrome_options,
                              service_log_path='NUL')
@@ -521,6 +533,18 @@ class Driver:
 
     def find_elements_by_tag_name(self, tag_name: str) -> list[WebElement]:
         return self.driver.find_elements_by_tag_name(tag_name)
+
+    def find_element_by_class_name(self, class_name: str) -> WebElement:
+        return self.driver.find_element_by_class_name(class_name)
+
+    def find_elements_by_class_name(self, class_name: str) -> list[WebElement]:
+        return self.driver.find_elements_by_class_name(class_name)
+
+    def find_element_by_id(self, id: str) -> WebElement:
+        return self.driver.find_element_by_id(id)
+
+    def find_elements_by_id(self, id: str) -> list[WebElement]:
+        return self.driver.find_elements_by_id(id)
 
     def title(self):
         """ Возвращает текущий заголовок открытой вкладки """

@@ -19,7 +19,7 @@ from command_executor import (CmdExc_Clear,
                               CmdExc_GetVersion,
                               CmdExc_Exit,
                               CmdExc_SetTModule,
-                              _all_commands)
+                              ALL_COMMANDS)
 
 
 def check_user_subscribe(ads_bot: AdsBot):
@@ -133,8 +133,8 @@ class Commander:
 
     def listen(self):
         while True:
-            _command = self.__get_user_input()
             try:
+                _command = self.__get_user_input()
                 self.__command_map.get(_command.name).execute(_command)
             except AttributeError as e:
                 logger.error('Неизвестная команда:')
@@ -196,6 +196,8 @@ if __name__ == '__main__':
     init_logger()
 
     ads_bot = AdsBot()
+    ads_bot.geo = 'Москва'
+    ads_bot.go_to_url('https://www.stock-watcher.com/screener?Change=%3E2&Changed=%3E0.4')
     commander = Commander(ads_bot)
     commander.listen()
     # check_user_subscribe(ads_bot)

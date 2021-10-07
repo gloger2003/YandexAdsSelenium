@@ -15,7 +15,12 @@ class CommandExecutor:
         self.__name = name
         self._ads_bot = ads_bot
         self._current_command = None
+
+        self.__create_help_method()
         pass
+
+    def __create_help_method(self):
+        self.__setattr__(f'_cmd_{self.__name}_help', self.__get_cmd_doc)
 
     def __get_cmd_exc_method(self, command_name: str) -> Callable:
         """ Преобразует имя в имя атрибута и
@@ -23,6 +28,16 @@ class CommandExecutor:
         _cmd_exc_method = self.__getattribute__(
             f'_cmd_{self.__name}_{command_name}')
         return _cmd_exc_method
+
+    def __get_cmd_doc(self, command_name: str) -> str:
+        """ Возвращает doc-string для любой команды
+            * `{CmdExc} help {CMD}`
+            * set_value help geo """
+        try:
+            method_name = f'_cmd_{self.__name}_{command_name}'
+            self.print_msg(self.__getattribute__(method_name).__doc__)
+        except AttributeError:
+            logger.warning('Такой команды не найдено!')
 
     def execute(self, command: Union[Command, str]):
         """ Преобразует команду в атрибут и
@@ -56,10 +71,17 @@ class CommandExecutor:
 
 
 class CmdExc_GetValue(CommandExecutor):
+    """ `get_value`
+        -----------
+        Возвращает значения ключевых переменных бота """
+
     def __init__(self, ads_bot: Driver) -> None:
         super().__init__(ads_bot, 'get_value')
 
     def _cmd_get_value_all(self):
+        """ `get_value all`
+            ---------------
+            Возвращает все значения всех ключевых переменных """
         self.print_msg(
             'Максимальное кол-во страниц:\n'
             f' | max_page_count: {self._ads_bot.max_page_count}\n'
@@ -81,28 +103,46 @@ class CmdExc_GetValue(CommandExecutor):
 
 
 class CmdExc_SetValue(CommandExecutor):
+    """ `set_value`
+        -----------
+        Устанавливает значение для любой ключевой переменной """
+
     def __init__(self, ads_bot: Driver) -> None:
         super().__init__(ads_bot, 'set_value')
 
     def _cmd_set_value_max_page_count(self, value: str):
+        """ `set_value max_page_count {INT}`
+            -------------------------------- """
         self._ads_bot.max_page_count = int(value)
 
     def _cmd_set_value_max_residence_time(self, value: str):
+        """ `set_value max_residence_time {INT}`
+            ------------------------------------ """
         self._ads_bot.max_residence_time = int(value)
 
     def _cmd_set_value_max_visit_count(self, value: str):
+        """ `set_value max_visit_count {INT}`
+            --------------------------------- """
         self._ads_bot.max_visit_count = int(value)
 
     def _cmd_set_value_incognito_mode(self, value: str):
+        """ `set_value incognito_mode {BOOL}`
+            --------------------------------- """
         self._ads_bot.incognito_mode = bool(value)
 
     def _cmd_set_value_proxy(self, value: str):
+        """ `set_value proxy {[STR | 0] - "LOGIN:PASSWORD@IP:PORT"}`
+            -------------------------------------------------------- """
         self._ads_bot.proxy = value if value != '0' else None
 
     def _cmd_set_value_user_agent(self, value: str):
+        """ `set_value user_agent {STR | 0}`
+            -------------------------------- """
         self._ads_bot.user_agent = value if value != '0' else None
 
     def _cmd_set_value_geo(self, value: str):
+        """ `set_value geo {STR | 0}`
+            ------------------------- """
         self._ads_bot.geo = value if value != '0' else None
 
 
@@ -127,6 +167,11 @@ class CmdExc_Exit(CommandExecutor):
     def _cmd_exit(self):
         self.print_msg('Работа завершена!')
         exit(0)
+
+    def _cmd_exit_exit(self):
+        """ Выходит из бота полностью """
+        # Это для работы команды help
+        # Вызывать с помощью "exit help exit"
 
 
 class CmdExc_Clear(CommandExecutor):
@@ -162,15 +207,19 @@ class CmdExc_Start(CommandExecutor):
         _tmodule._process(text, int(page))
 
     def _cmd_start_tmodule(self):
-        self._ads_bot.get_current_tmodule().obj.run()
+        while True:
+            self._ads_bot.get_current_tmodule().obj.run()
 
 
 class CmdExc_WriteToFile(CommandExecutor):
     def __init__(self, ads_bot: Driver) -> None:
         super().__init__(ads_bot, 'w2f')
 
-    def _cmd_w2f(self, basename: str, value: str):
-        var_name = f'{basename.upper()}_FILE_NAME'
+    def _cmd_w2f(self, base_name: str, value: str):
+        """ Записывает значение в конец указанного файла\n
+            `w2f {BASE_FILENAME} {VALUE}`
+            ----------------------------- """
+        var_name = f'{base_name.upper()}_FILE_NAME'
         file_name = io_utils.__dict__.get(var_name)
         with open(file_name, 'a', encoding='utf-8') as f:
             f.write(f'{value}\n')
